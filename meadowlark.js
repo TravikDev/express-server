@@ -1,6 +1,7 @@
 const express = require('express')
 const exphbs = require('express-handlebars')
 const fortune = require('./lib/fortune')
+const handlers = require('./lib/handlers')
 const app = express()
 const port = process.env.PORT || 3000
 const dateServerStarted = performance.now()
@@ -15,27 +16,18 @@ app.set('view engine', 'hbs')
 
 app.use(express.static('public'))
 
-app.get('/', (req, res) => res.render('home'))
+app.get('/', handlers.home)
 
-app.get('/about', (req, res) => {
-    
-    res.render('about', {fortune:fortune.getFortune()})
-})
+app.get('/about', handlers.about)
 
-app.use((req, res) => {
-    res.type('text/plain')
-    res.status(404)
-    res.send(`404 - Page not found \n Server started at ${dateServerStarted}`)
-})
+app.use(handlers.notFound)
 
-app.use((err, req, res, next) => {
-    console.error(err.message)
-    res.type('text/plain')
-    res.status(500)
-    res.send('500 - Server network error')
-})
+app.use(handlers.serverError)
 
-app.listen(port, () => console.log(
+if(require.main === module) {
+app.createServer().listen(port, () => { console.log(
     `Express started without any problem on http://localhost:${port} \n` + 
-    `Push the Ctrl+C to close server`
-))
+    `Push the Ctrl+C to close server`)
+})} else {
+    module.exports = app
+}
